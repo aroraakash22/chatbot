@@ -8,10 +8,12 @@ st.set_page_config(page_title="PW Chatbot", page_icon=icon_url)
 
 # Introduce a typewriter effect to the chat
 def typewriter_effect(text):
+    container = st.empty()
+    output_text = ""
     for char in text:
-        st.text(char, end='', key='typewriter_temp')
-        time.sleep(0.05)  # Sleep for 50ms for each character
-    st.text('')  # To move to next line after writing
+        time.sleep(0.05)
+        output_text += char
+        container.text(output_text)
 
 # Sidebar
 with st.sidebar:
@@ -36,15 +38,15 @@ for msg in st.session_state.messages:
 
 if prompt := st.chat_input():
     if not openai_api_key:
-        st.info("Please add your OpenAI API key to continue.")
+        st.warning("Please add your OpenAI API key to continue.")
         st.stop()
 
     openai.api_key = openai_api_key
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
-    if directive:  # If there's a directive, prepend it to the prompt
+    if directive:  
         prompt = f"{directive}: {prompt}"
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
+    response = openai.Completion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)  # fixed method name
     msg = response.choices[0].message
     st.session_state.messages.append(msg)
     typewriter_effect(msg["content"])
