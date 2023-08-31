@@ -1,23 +1,29 @@
 import openai
 import streamlit as st
-import time
 
-# Initialize OpenAI once an API key is entered
+# Initialize OpenAI with the provided API key
 def initialize_openai(api_key):
     openai.api_key = api_key
 
-# Fetch response from GPT-3.5 Turbo model
-def get_openai_response(prompt_text, directive=""):
-    prompt = directive + " " + prompt_text
+# Fetch a response from GPT-3.5 Turbo model using the chat endpoint
+def get_openai_response(messages, directive=""):
     try:
-        response = openai.Completion.create(
-            engine="gpt-3.5-turbo",  
-            prompt=prompt,
-            max_tokens=150
+        initial_message = {
+            "role": "system",
+            "content": directive
+        } if directive else {
+            "role": "user",
+            "content": "You are a helpful assistant."
+        }
+
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[initial_message, {"role": "user", "content": messages[-1]['content']}]
         )
-        return response.choices[0].text.strip()
+        
+        return response['choices'][0]['message']['content']
     except Exception as e:
-        return f"Error: {e}"
+        return str(e)
 
 st.title("PW Chatbots")
 
@@ -30,27 +36,26 @@ directive = st.sidebar.text_area("Enter Directive:")
 if api_key:
     initialize_openai(api_key)
 
-# Manage user and bot messages
-user_messages = []
-bot_messages = []
+# Message management
+messages = []
 
 # Capture user input
 user_input = st.text_input("You:")
 
 if user_input:
     if api_key:  # Ensure API key is present
-        # Save user message and get bot response
-        user_messages.append(user_input)
-        bot_response = get_openai_response(user_input, directive)
-        bot_messages.append(bot_response)
+        messages.append({"role": "user", "content": user_input})
+        bot_response = get_openai_response(messages, directive)
+        messages.append({"role": "assistant", "content": bot_response})
         
         # Clear the user input box
         st.text_input("You:", value="", key="user_input")
 
 # Display chat history
-for user_msg, bot_msg in zip(user_messages, bot_messages):
-    st.write(f"You: {user_msg}")
-    st.write(f"Chatbot: {bot_msg}")
+for message in messages:
+    role = message["role"].capitalize()
+    content = message["content"]
+    st.write(f"{role}: {content}")
 
 # Explanation in sidebar
 st.sidebar.markdown("""
