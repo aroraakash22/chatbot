@@ -3,7 +3,7 @@ from random import randrange
 import time
 import openai
 import streamlit as st
-from utils.styles.menu_styles import FOOTER_STYLES, HEADER_STYLES
+from project_directory.utils.styles.menu_styles import FOOTER_STYLES, HEADER_STYLES
 from utils.conversation import get_user_input, show_chat_buttons, show_conversation
 from utils.footer import show_donates, show_info
 from utils.helpers import get_files_in_dir, get_random_img
