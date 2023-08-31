@@ -11,7 +11,7 @@ def get_openai_response(prompt_text, directive=""):
     prompt = directive + " " + prompt_text
     try:
         response = openai.Completion.create(
-            engine="text-davinci-003",  # Use GPT-3.5 Turbo model
+            engine="gpt-3.5-turbo",  
             prompt=prompt,
             max_tokens=150
         )
@@ -19,15 +19,9 @@ def get_openai_response(prompt_text, directive=""):
     except Exception as e:
         return f"Error: {e}"
 
-# Typewriter effect
-def typewriter(text):
-    for char in text:
-        st.write(char, end='', key='chat_output')
-        time.sleep(0.05)
-
 st.title("PW Chatbots")
 
-# Sidebar
+# Sidebar for settings
 st.sidebar.header("Settings")
 api_key = st.sidebar.text_input("Enter OpenAI API Key:", type="password")
 directive = st.sidebar.text_area("Enter Directive:")
@@ -36,17 +30,27 @@ directive = st.sidebar.text_area("Enter Directive:")
 if api_key:
     initialize_openai(api_key)
 
-# Chat UI
+# Manage user and bot messages
+user_messages = []
+bot_messages = []
+
+# Capture user input
 user_input = st.text_input("You:")
 
 if user_input:
     if api_key:  # Ensure API key is present
-        # Fetch chatbot response
-        chatbot_response = get_openai_response(user_input, directive)
-        # Display using typewriter effect
-        typewriter("Chatbot: " + chatbot_response)
-    else:
-        st.write("Please enter OpenAI API key in the sidebar.")
+        # Save user message and get bot response
+        user_messages.append(user_input)
+        bot_response = get_openai_response(user_input, directive)
+        bot_messages.append(bot_response)
+        
+        # Clear the user input box
+        st.text_input("You:", value="", key="user_input")
+
+# Display chat history
+for user_msg, bot_msg in zip(user_messages, bot_messages):
+    st.write(f"You: {user_msg}")
+    st.write(f"Chatbot: {bot_msg}")
 
 # Explanation in sidebar
 st.sidebar.markdown("""
