@@ -2,6 +2,10 @@ import openai
 import streamlit as st
 import time
 
+# Set the icon and title of the chatbot
+icon_url = "https://drive.google.com/uc?export=view&id=1qaSJMQRCQxCTlL-obX0T2YsP64rZq5sq"
+st.set_page_config(page_title="PW Chatbot", page_icon=icon_url)
+
 # Introduce a typewriter effect to the chat
 def typewriter_effect(text):
     for char in text:
@@ -17,9 +21,6 @@ with st.sidebar:
     st.markdown("[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)")
     st.markdown("[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)")
 
-# Set the icon and title of the chatbot
-icon_url = "https://drive.google.com/uc?export=view&id=1qaSJMQRCQxCTlL-obX0T2YsP64rZq5sq"
-st.set_page_config(page_title="PW Chatbot", page_icon=icon_url)
 st.title("PW Chatbot")
 
 if "messages" not in st.session_state:
