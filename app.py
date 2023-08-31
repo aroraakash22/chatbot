@@ -1,52 +1,49 @@
-import time
 import openai
 import streamlit as st
+import time
 
-# --- GENERAL SETTINGS ---
-PAGE_TITLE: str = "AI Talks"
-PAGE_ICON: str = "🤖"
-st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON)
+# Introduce a typewriter effect to the chat
+def typewriter_effect(text):
+    for char in text:
+        st.text(char, end='', key='typewriter_temp')
+        time.sleep(0.05)  # Sleep for 50ms for each character
+    st.text('')  # To move to next line after writing
 
-# Set OpenAI API Key
-openai.api_key = st.sidebar.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
+# Sidebar
+with st.sidebar:
+    openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
+    directive = st.text_input("Directive for Chatbot")
+    st.markdown("[Get an OpenAI API key](https://platform.openai.com/account/api-keys)")
+    st.markdown("[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)")
+    st.markdown("[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)")
 
-# Initialize session state
+# Set the icon and title of the chatbot
+icon_url = "https://drive.google.com/uc?export=view&id=1qaSJMQRCQxCTlL-obX0T2YsP64rZq5sq"
+st.set_page_config(page_title="PW Chatbot", page_icon=icon_url)
+st.title("PW Chatbot")
+
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "How can I help you?"}]
+    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
 
-def typewriter_effect(message):
-    for char in message:
-        st.write(char, end='', use_container_width=True)
-        st.markdown("", unsafe_allow_html=True)  # Force a rerun and display the character
-        time.sleep(0.05)
-
-def main():
-    if openai.api_key:
-        user_input = st.text_input("You: ")
-        if user_input:
-            st.session_state.messages.append({"role": "user", "content": user_input})
-
-            # AI Response
-            response = openai.Completion.create(
-                model="gpt-3.5-turbo",
-                prompt=f"You: {user_input}\nPW Chatbot:",
-                max_tokens=150,
-                n=1,
-                stop=None,
-                temperature=0.7
-            )
-            chatbot_response = response.choices[0].text.strip()
-            st.session_state.messages.append({"role": "assistant", "content": chatbot_response})
-
-            # Display the chat history
-            for msg in st.session_state.messages:
-                if msg["role"] == "user":
-                    st.write(f"You: {msg['content']}")
-                else:
-                    st.write(f"PW Chatbot: {msg['content']}")
-
+for msg in st.session_state.messages:
+    role = msg["role"]
+    content = msg["content"]
+    if role == "assistant":
+        typewriter_effect(content)
     else:
-        st.warning("Please provide your OpenAI API Key to interact with PW Chatbot.")
+        st.chat_message(role).write(content)
 
-if __name__ == "__main__":
-    main()
+if prompt := st.chat_input():
+    if not openai_api_key:
+        st.info("Please add your OpenAI API key to continue.")
+        st.stop()
+
+    openai.api_key = openai_api_key
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
+    if directive:  # If there's a directive, prepend it to the prompt
+        prompt = f"{directive}: {prompt}"
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
+    msg = response.choices[0].message
+    st.session_state.messages.append(msg)
+    typewriter_effect(msg["content"])
